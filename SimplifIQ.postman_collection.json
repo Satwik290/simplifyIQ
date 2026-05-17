@@ -1,0 +1,435 @@
+{
+  "info": {
+    "_postman_id": "simplif-iq-lead-automation",
+    "name": "SimplifIQ Lead Automation System",
+    "description": "Complete API collection for SimplifIQ B2B Lead Intake, Enrichment, and Audit Pipeline",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has required fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('service');",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "});",
+                  "",
+                  "pm.test('Service name is correct', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('online');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            },
+            "description": "Check if the SimplifIQ API is online and responsive"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Leads Management",
+      "item": [
+        {
+          "name": "Submit Lead Form",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 202 Accepted', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});",
+                  "",
+                  "pm.test('Response contains leadId', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success').to.equal(true);",
+                  "    pm.expect(jsonData).to.have.property('leadId');",
+                  "    pm.environment.set('leadId', jsonData.leadId);",
+                  "});",
+                  "",
+                  "pm.test('Response contains timestamp', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('timestamp');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"TechCorp Innovation Labs\",\n  \"website\": \"techcorp.com\",\n  \"industry\": \"SaaS & Software\",\n  \"contactName\": \"John Smith\",\n  \"email\": \"john.smith@techcorp.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads"
+              ]
+            },
+            "description": "Submit a new lead through the intake form. Returns immediately with a leadId for polling status."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Lead Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains lead object with status', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success').to.equal(true);",
+                  "    pm.expect(jsonData).to.have.property('lead');",
+                  "    pm.expect(jsonData.lead).to.have.property('status');",
+                  "});",
+                  "",
+                  "pm.test('Lead has expected properties', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var lead = jsonData.lead;",
+                  "    pm.expect(lead).to.have.property('id');",
+                  "    pm.expect(lead).to.have.property('companyName');",
+                  "    pm.expect(lead).to.have.property('email');",
+                  "    pm.expect(lead).to.have.property('createdAt');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads",
+                "{{leadId}}"
+              ]
+            },
+            "description": "Poll the status of a specific lead. Use the leadId from form submission. Status transitions: pending → enriching → generating → sent (or failed)"
+          },
+          "response": []
+        },
+        {
+          "name": "List All Leads",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is array of leads', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('success').to.equal(true);",
+                  "    pm.expect(jsonData).to.have.property('leads');",
+                  "    pm.expect(jsonData.leads).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Leads are sorted by creation date (newest first)', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.leads.length > 1) {",
+                  "        var first = new Date(jsonData.leads[0].createdAt);",
+                  "        var second = new Date(jsonData.leads[1].createdAt);",
+                  "        pm.expect(first.getTime()).to.be.at.least(second.getTime());",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads"
+              ]
+            },
+            "description": "Retrieve all submitted leads from the system. Returns array sorted by creation date (newest first)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Validation Tests",
+      "item": [
+        {
+          "name": "Invalid Email Format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error message indicates validation failure', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData.error).to.equal('Form validation failed');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Test Corp\",\n  \"website\": \"testcorp.com\",\n  \"industry\": \"SaaS\",\n  \"contactName\": \"John Doe\",\n  \"email\": \"invalid-email-format\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads"
+              ]
+            },
+            "description": "Test validation: Email must be valid format"
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Fields",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error details include missing fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('details');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Test Corp\",\n  \"website\": \"testcorp.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads"
+              ]
+            },
+            "description": "Test validation: All required fields must be present"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Website URL",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error indicates invalid URL', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Test Corp\",\n  \"website\": \"not a valid url\",\n  \"industry\": \"SaaS\",\n  \"contactName\": \"John Doe\",\n  \"email\": \"john@test.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads"
+              ]
+            },
+            "description": "Test validation: Website must be valid URL"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Workflow Examples",
+      "item": [
+        {
+          "name": "1. Submit Finance Company",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('financeLeadId', jsonData.leadId);",
+                  "pm.test('Lead submitted successfully', function () {",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Goldman Investment Partners\",\n  \"website\": \"goldman-invest.com\",\n  \"industry\": \"Finance & Fintech\",\n  \"contactName\": \"Sarah Johnson\",\n  \"email\": \"sarah@goldman-invest.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads"
+              ]
+            },
+            "description": "Step 1: Submit a finance company lead"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Poll Finance Lead Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/leads/{{financeLeadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "leads",
+                "{{financeLeadId}}"
+              ]
+            },
+            "description": "Step 2: Check the audit status (repeat every 2-3 seconds)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "leadId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "financeLeadId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
