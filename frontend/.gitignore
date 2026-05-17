@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Next.js Build Output
+.next/
+out/
+
+# Production Build Output
+build/
+
+# Local Environment / Secrets
+.env
+.env*.local

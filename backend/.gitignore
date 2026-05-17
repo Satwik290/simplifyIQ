@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Local Environment / Secrets
+.env
+.env*.local
+
+# Compiled Output
+dist/
+out/
+
+# Persistent Lead JSON Databases
+data/*.json
+
+# Locally Compiled Diagnostic PDFs
+*.pdf

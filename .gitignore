@@ -1,0 +1,41 @@
+# ==========================================
+# SimplifIQ Monorepo Master Git Ignore
+# ==========================================
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Local Environment / Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.local
+
+# Compiled Backend Output
+backend/dist/
+backend/out/
+
+# Compiled Frontend Output
+frontend/.next/
+frontend/out/
+
+# Persistent Lead Local JSON Database
+backend/data/leads.json
+
+# Temporary verification / Local CLI files
+backend/test_growth_audit.pdf
+**/test_growth_audit.pdf
+
+# Debugging logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# System Files
+.DS_Store
+Thumbs.db

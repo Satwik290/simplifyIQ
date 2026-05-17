@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: simplif-iq-backend
+    ports:
+      - "3001:3001"
+    volumes:
+      # Persistent local JSON database storage on the host machine
+      - ./backend/data:/app/data
+    env_file:
+      - ./backend/.env
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: simplif-iq-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Configures the client-side browser endpoint to speak to Express
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    restart: always
