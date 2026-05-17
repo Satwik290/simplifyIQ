@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { validateEmailSafety } from './sanitizer';
 
+const capitalizeWords = (val: string) => val.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+
 /**
  * Normalizes a URL input by ensuring it has a protocol (defaults to https://)
  */
@@ -49,7 +51,8 @@ export const leadIntakeSchema = z.object({
     .string({ required_error: 'Company name is required' })
     .trim()
     .min(1, 'Company name cannot be empty')
-    .max(100, 'Company name is too long'),
+    .max(100, 'Company name is too long')
+    .transform(capitalizeWords),
   
   website: z
     .string({ required_error: 'Company website is required' })
@@ -68,14 +71,15 @@ export const leadIntakeSchema = z.object({
   industry: z
     .string({ required_error: 'Industry is required' })
     .trim()
-    .min(1, 'Industry cannot be empty'),
+    .min(1, 'Industry cannot be empty')
+    .transform(capitalizeWords),
 
   contactName: z
     .string({ required_error: 'Your name is required' })
     .trim()
     .min(1, 'Contact name cannot be empty')
     .max(100, 'Contact name is too long')
-    .transform(val => val.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')),
+    .transform(capitalizeWords),
 
   email: z
     .string({ required_error: 'Your email is required' })

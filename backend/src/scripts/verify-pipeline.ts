@@ -5,6 +5,7 @@ import { Lead } from '../services/leadService';
 import { EnrichmentService } from '../services/enrichmentService';
 import { GeminiService } from '../services/geminiService';
 import { ReportService } from '../services/reportService';
+import { leadIntakeSchema } from '../utils/validation';
 import { logger } from '../utils/logger';
 
 // Load environment variables locally
@@ -26,14 +27,22 @@ async function runPipelineVerification() {
   const reportService = new ReportService();
 
   // Mock Lead submission details
+  const parsedLead = leadIntakeSchema.parse({
+    companyName: 'techcorp av systems',
+    website: 'https://github.com',
+    industry: 'audio visual field installations',
+    contactName: 'johnathan doe',
+    email: 'john@techcorp.com',
+  });
+
   const mockLead: Lead = {
     id: 'verify-uuid-' + Math.random().toString(36).substring(2, 7),
-    companyName: 'Sample SaaS Corp',
-    website: 'https://github.com', // Using GitHub as a stable website to scrape for testing
+    companyName: parsedLead.companyName,
+    website: parsedLead.website, 
     domain: 'github.com',
-    industry: 'SaaS & Development Tools',
-    contactName: 'Alexander Growth',
-    email: 'alexander@samplesaas.com',
+    industry: parsedLead.industry,
+    contactName: parsedLead.contactName,
+    email: parsedLead.email,
     status: 'pending',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()

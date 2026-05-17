@@ -235,8 +235,18 @@ export class GeminiService {
       trend3: { name: 'Real-Time Insights & Dashboards', description: 'Empowering B2B clients with interactive dashboards to monitor their active integrations and performance indexes.' }
     };
     
-    // Tailor SWOT by Industry
-    if (industry.toLowerCase().includes('saas') || industry.toLowerCase().includes('tech')) {
+    // Tailor Classification
+    const lowerIndustry = industry.toLowerCase();
+    const isPhysicalService = lowerIndustry.includes('install') || lowerIndustry.includes('support') || lowerIndustry.includes('audio') || lowerIndustry.includes('field') || lowerIndustry.includes('construction') || lowerIndustry.includes('plumb');
+    const isSaaS = !isPhysicalService && (lowerIndustry.includes('saas') || lowerIndustry.includes('software') || lowerIndustry.includes('tech'));
+    const isFinance = !isPhysicalService && !isSaaS && (lowerIndustry.includes('finance') || lowerIndustry.includes('consulting') || lowerIndustry.includes('legal'));
+
+    let businessModel = 'B2B Services';
+    let recommendations: any[] = [];
+
+    // Tailor SWOT and Recommendations by Industry
+    if (isSaaS) {
+      businessModel = 'B2B SaaS';
       strengths = [
         'Dedicated technical foundations and structure',
         `High digital brand flexibility on the ${scrapedData.technologyHints.join(', ') || 'web'}`,
@@ -257,7 +267,28 @@ export class GeminiService {
         'Rising ad spend inflation across search engines',
         'SaaS budget consolidation inside enterprise companies'
       ];
-    } else if (industry.toLowerCase().includes('finance') || industry.toLowerCase().includes('consulting')) {
+      recommendations = [
+        {
+          category: 'Website & UX',
+          title: 'Optimize Homepage Title & Meta Descriptions',
+          description: `Current metadata: Title: "${defaultTitle.substring(0, 40)}...", Description: "${defaultDesc.substring(0, 40)}...". Optimize for search intent to double organic click rates.`,
+          impact: 'High'
+        },
+        {
+          category: 'Growth & Marketing',
+          title: 'Implement AI-Driven Inbound Audits',
+          description: 'Offer real-time consulting audit generators directly on the website to capture B2B email addresses with an 8x higher conversion rate than traditional contact forms.',
+          impact: 'High'
+        },
+        {
+          category: 'Systems & Integration',
+          title: 'Integrate CRM and Lead Workflows',
+          description: 'Establish automated sync connections between web forms, Google Sheets logging, and email triggers to respond to incoming interest in under 3 minutes.',
+          impact: 'Medium'
+        }
+      ];
+    } else if (isFinance) {
+      businessModel = 'Financial & Consulting';
       strengths = [
         'Client-first relationship-driven focus',
         'Experienced principal partner framework',
@@ -278,8 +309,71 @@ export class GeminiService {
         'Shifting regulatory frameworks and compliance costs',
         'Talent retention constraints in mid-tier corporate structures'
       ];
+      recommendations = [
+        {
+          category: 'Website & UX',
+          title: 'Deploy Interactive ROI Calculators',
+          description: 'Embed dynamic cost-saving or investment calculators on landing pages to increase time-on-site and capture high-intent financial leads.',
+          impact: 'High'
+        },
+        {
+          category: 'Growth & Marketing',
+          title: 'Publish Thought Leadership Reports',
+          description: 'Regularly publish downloadable PDFs analyzing industry regulations or financial trends to build authority and capture emails.',
+          impact: 'High'
+        },
+        {
+          category: 'Systems & Integration',
+          title: 'Automate Client Onboarding Docs',
+          description: 'Implement secure digital signature workflows and automated compliance data collection to speed up new client intake.',
+          impact: 'Medium'
+        }
+      ];
+    } else if (isPhysicalService) {
+      businessModel = 'Physical B2B Services';
+      strengths = [
+        `Strong local/field presence in the ${industry} space`,
+        'Tangible project delivery and physical installations',
+        'Adaptive on-site service teams'
+      ];
+      weaknesses = [
+        'Highly manual quoting and site-visit scheduling',
+        'Lack of digitized portfolio and post-install reviews',
+        'Underutilized localized search engine optimization'
+      ];
+      opportunities = [
+        'Launch automated digital quoting forms based on client dimensions',
+        'Deploy localized SEO landing pages for each service territory',
+        'Implement automated post-install review request sequences'
+      ];
+      threats = [
+        'Labor shortages in skilled technical trades',
+        'Supply chain volatility for hardware/installation materials',
+        'Aggressive expansion from venture-backed regional conglomerates'
+      ];
+      recommendations = [
+        {
+          category: 'Website & UX',
+          title: 'Digitize the Field Quoting Process',
+          description: 'Implement a multi-step digital quoting form that collects site dimensions and hardware requirements upfront, reducing unnecessary initial dispatch trips.',
+          impact: 'High'
+        },
+        {
+          category: 'Growth & Marketing',
+          title: 'Build Localized SEO Case Studies',
+          description: 'Publish detailed visual case studies for successful regional installations. Tag these with local keywords to dominate regional search results.',
+          impact: 'High'
+        },
+        {
+          category: 'Systems & Integration',
+          title: 'Automate Dispatch & Follow-ups',
+          description: 'Integrate field service management tools with CRM to automatically dispatch crews and trigger post-install review emails.',
+          impact: 'Medium'
+        }
+      ];
     } else {
       // General B2B fallback
+      businessModel = 'B2B Services';
       strengths = [
         `Strong local presence in the ${industry} market space`,
         'Client-centric service delivery standard',
@@ -300,6 +394,26 @@ export class GeminiService {
         'Disruptive direct-to-consumer digital channels',
         'Increasing acquisition cost indexes'
       ];
+      recommendations = [
+        {
+          category: 'Website & UX',
+          title: 'Optimize Homepage Title & Meta Descriptions',
+          description: `Current metadata: Title: "${defaultTitle.substring(0, 40)}...", Description: "${defaultDesc.substring(0, 40)}...". Optimize for search intent to double organic click rates.`,
+          impact: 'High'
+        },
+        {
+          category: 'Growth & Marketing',
+          title: 'Launch Targeted Account Outreach',
+          description: 'Deploy automated cold-email sequences personalized to specific decision-makers in your target B2B sector.',
+          impact: 'Medium'
+        },
+        {
+          category: 'Systems & Integration',
+          title: 'Integrate CRM and Lead Workflows',
+          description: 'Establish automated sync connections between web forms, Google Sheets logging, and email triggers to respond to incoming interest in under 3 minutes.',
+          impact: 'High'
+        }
+      ];
     }
 
     return {
@@ -309,7 +423,7 @@ export class GeminiService {
         positioningStatement: `We empower B2B clients by combining standard industry practices with cutting-edge digital delivery.`
       },
       companyProfile: {
-        businessModel: industry.toLowerCase().includes('saas') ? 'B2B SaaS' : 'B2B Services',
+        businessModel,
         speculatedScale: techCount >= 3 ? 'Growth-stage SME' : 'Early-stage Startup',
         digitalCompetence
       },
@@ -325,26 +439,7 @@ export class GeminiService {
         trend2: trends.trend2,
         trend3: trends.trend3
       },
-      recommendations: [
-        {
-          category: 'Website & UX',
-          title: 'Optimize Homepage Title & Meta Descriptions',
-          description: `Current metadata: Title: "${defaultTitle.substring(0, 40)}...", Description: "${defaultDesc.substring(0, 40)}...". Optimize for search intent to double organic click rates.`,
-          impact: 'High'
-        },
-        {
-          category: 'Growth & Marketing',
-          title: 'Implement AI-Driven Inbound Audits',
-          description: 'Offer real-time consulting audit generators directly on the website to capture B2B email addresses with an 8x higher conversion rate than traditional contact forms.',
-          impact: 'High'
-        },
-        {
-          category: 'Systems & Integration',
-          title: 'Integrate CRM and Lead Workflows',
-          description: 'Establish automated sync connections between web forms, Google Sheets logging, and email triggers to respond to incoming interest in under 3 minutes.',
-          impact: 'Medium'
-        }
-      ]
+      recommendations
     };
   }
 }
