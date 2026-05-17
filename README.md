@@ -1,4 +1,4 @@
-# SimplifIQ 🚀
+# Simplifi-IQ 🚀
 
 > **AI-Native B2B Lead Automation System**  
 > Generate personalized, professional growth audits automatically. From form submission to PDF delivery in 3 minutes.
