@@ -23,6 +23,21 @@ Lead Form → Web Scraping → AI Synthesis → PDF Generation → Email Deliver
 
 **Real-world impact:** Convert leads 8x faster with personalized audit reports that demonstrate research and industry understanding—immediately after form submission.
 
+### 📸 Application Workflow
+
+<table align="center">
+  <tr>
+    <td align="center"><b>1. Lead Intake</b></td>
+    <td align="center"><b>2. AI Processing</b></td>
+    <td align="center"><b>3. Success & Delivery</b></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="assets/step1_intake.png" alt="Lead Form Intake"></td>
+    <td width="33%"><img src="assets/step2_processing.png" alt="Pipeline Processing"></td>
+    <td width="33%"><img src="assets/step3_success.png" alt="Success Screen"></td>
+  </tr>
+</table>
+
 ---
 
 ## 🎯 Key Features
