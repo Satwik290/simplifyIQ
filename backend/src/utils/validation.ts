@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateEmailSafety } from './sanitizer';
 
 /**
  * Normalizes a URL input by ensuring it has a protocol (defaults to https://)
@@ -81,6 +82,9 @@ export const leadIntakeSchema = z.object({
     .trim()
     .min(1, 'Email cannot be empty')
     .email('Invalid email address format')
+    .refine(validateEmailSafety, { 
+      message: 'Email contains invalid characters' 
+    })
 });
 
 export type LeadInput = z.infer<typeof leadIntakeSchema>;

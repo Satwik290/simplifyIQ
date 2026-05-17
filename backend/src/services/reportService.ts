@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import { Lead } from './leadService';
 import { AuditReportData } from './geminiService';
 import { logger } from '../utils/logger';
+import { escapeHtml } from '../utils/sanitizer';
 
 export class ReportService {
   /**
@@ -9,6 +10,13 @@ export class ReportService {
    */
   async generateReport(lead: Lead, reportData: AuditReportData): Promise<Buffer> {
     logger.info(`Compiling PDF Audit Report for lead ID: ${lead.id}...`);
+
+    const safeCompanyName = escapeHtml(lead.companyName);
+    const safeIndustry = escapeHtml(lead.industry);
+    const safeWebsite = escapeHtml(lead.website);
+    const safeContactName = escapeHtml(lead.contactName);
+    const safeEmail = escapeHtml(lead.email);
+    const safeDomain = escapeHtml(lead.domain);
 
     return new Promise((resolve, reject) => {
       try {
@@ -68,7 +76,7 @@ export class ReportService {
         doc.fillColor(colors.accentGold)
            .font('Helvetica-Bold')
            .fontSize(14)
-           .text(`PREPARED FOR THE B2B ${lead.industry.toUpperCase()} SECTOR`, 50, 275);
+           .text(`PREPARED FOR THE B2B ${safeIndustry.toUpperCase()} SECTOR`, 50, 275);
 
         // Secondary Text
         doc.fillColor(colors.white)
@@ -86,19 +94,19 @@ export class ReportService {
         let cardY = 585;
 
         doc.fillColor(colors.accentGold).font('Helvetica-Bold').fontSize(11).text('CLIENT PROFILE:', labelCol, cardY);
-        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(12).text(lead.companyName.toUpperCase(), valCol, cardY);
+        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(12).text(safeCompanyName.toUpperCase(), valCol, cardY);
         
         cardY += 25;
         doc.fillColor(colors.white).font('Helvetica').fontSize(10).text('Website Domain:', labelCol, cardY);
-        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(10).text(lead.website, valCol, cardY);
+        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(10).text(safeWebsite, valCol, cardY);
 
         cardY += 20;
         doc.fillColor(colors.white).font('Helvetica').fontSize(10).text('Primary Contact:', labelCol, cardY);
-        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(10).text(lead.contactName, valCol, cardY);
+        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(10).text(safeContactName, valCol, cardY);
 
         cardY += 20;
         doc.fillColor(colors.white).font('Helvetica').fontSize(10).text('Delivery Email:', labelCol, cardY);
-        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(10).text(lead.email, valCol, cardY);
+        doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(10).text(safeEmail, valCol, cardY);
 
         cardY += 20;
         doc.fillColor(colors.white).font('Helvetica').fontSize(10).text('Audit Date:', labelCol, cardY);
@@ -119,7 +127,7 @@ export class ReportService {
           doc.fillColor(colors.lightGray).font('Helvetica-Bold').fontSize(8).text('SIMPLIFIQ AUDIT SYSTEM', 50, 40);
           doc.fillColor(colors.lightGray).font('Helvetica').fontSize(8).text(`|   ${pageTitle.toUpperCase()}`, 175, 40);
           
-          doc.fillColor(colors.primaryBlue).font('Helvetica-Bold').fontSize(8).text(lead.companyName.toUpperCase(), 450, 40, { align: 'right', width: 95 });
+          doc.fillColor(colors.primaryBlue).font('Helvetica-Bold').fontSize(8).text(safeCompanyName.toUpperCase(), 450, 40, { align: 'right', width: 95 });
           
           // Header Line
           doc.moveTo(50, 52).lineTo(545, 52).lineWidth(0.5).stroke(colors.borderGray);
@@ -172,13 +180,13 @@ export class ReportService {
         doc.roundedRect(50, gridY, colWidth, 75, 4).fill(colors.bgLight);
         doc.fillColor(colors.lightGray).font('Helvetica-Bold').fontSize(8).text('ESTIMATED COMPETENCE', 65, gridY + 12);
         doc.fillColor(colors.primaryBlue).font('Helvetica-Bold').fontSize(16).text(`${reportData.companyProfile.digitalCompetence} Cap`, 65, gridY + 26);
-        doc.fillColor(colors.darkGray).font('Helvetica').fontSize(8.5).text(`Based on ${lead.domain}'s scripts.`, 65, gridY + 47);
+        doc.fillColor(colors.darkGray).font('Helvetica').fontSize(8.5).text(`Based on ${safeDomain}'s scripts.`, 65, gridY + 47);
 
         // Card 2: Scale Speculation
         doc.roundedRect(307, gridY, colWidth, 75, 4).fill(colors.bgLight);
         doc.fillColor(colors.lightGray).font('Helvetica-Bold').fontSize(8).text('ESTIMATED SCALE', 322, gridY + 12);
         doc.fillColor(colors.primaryBlue).font('Helvetica-Bold').fontSize(14).text(reportData.companyProfile.speculatedScale, 322, gridY + 27);
-        doc.fillColor(colors.darkGray).font('Helvetica').fontSize(8.5).text(`Sector: ${lead.industry}`, 322, gridY + 47);
+        doc.fillColor(colors.darkGray).font('Helvetica').fontSize(8.5).text(`Sector: ${safeIndustry}`, 322, gridY + 47);
 
         // Web Scraping Audit Findings
         doc.fillColor(colors.darkGray).font('Helvetica-Bold').fontSize(11).text('LIVE HOMEPAGE AUDIT SUMMARY', 50, 425);
@@ -270,7 +278,7 @@ export class ReportService {
 
         // Industry Trends Section
         let trendsY = swotY + quadH + 25;
-        doc.fillColor(colors.darkGray).font('Helvetica-Bold').fontSize(11).text(`KEY MODERN B2B ${lead.industry.toUpperCase()} TRENDS`, 50, trendsY);
+        doc.fillColor(colors.darkGray).font('Helvetica-Bold').fontSize(11).text(`KEY MODERN B2B ${safeIndustry.toUpperCase()} TRENDS`, 50, trendsY);
         
         // Alignment Score Card
         let cardX = 50;
@@ -284,7 +292,7 @@ export class ReportService {
         doc.fillColor(colors.lightGray).font('Helvetica-Bold').fontSize(7.5).text('ALIGNMENT', 80, trendsCardY + 85, { align: 'center', width: 60 });
 
         // List key trends
-        let textY = cardY + 15;
+        let textY = trendsCardY + 15;
         const bulletX = 180;
         const trendList = [reportData.industryTrends.trend1, reportData.industryTrends.trend2, reportData.industryTrends.trend3];
         
@@ -345,7 +353,7 @@ export class ReportService {
 
         doc.fillColor(colors.accentGold).font('Helvetica-Bold').fontSize(13).text('NEXT STEPS: LAUNCH YOUR AUTOMATION PLAYBOOK', 70, 450);
         doc.fillColor(colors.white).font('Helvetica').fontSize(9.5).text(
-          `This performance report highlights immediate low-hanging growth drivers discovered for ${lead.companyName}. By implementing the structured recommendations outlined above, B2B ${lead.industry} operators regularly unlock 2.5x higher capture rates and double sales qualified leads.`, 
+          `This performance report highlights immediate low-hanging growth drivers discovered for ${safeCompanyName}. By implementing the structured recommendations outlined above, B2B ${safeIndustry} operators regularly unlock 2.5x higher capture rates and double sales qualified leads.`, 
           70, 472, { width: 455, lineGap: 3.5 }
         );
 

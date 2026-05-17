@@ -53,7 +53,10 @@ export default function LeadAuditPage() {
     }
   });
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 
+                 (typeof window !== 'undefined' && window.location.origin && window.location.origin.includes(':3000') 
+                   ? 'http://localhost:3001' 
+                   : (typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'http://localhost:3001'));
 
   // Cleanup polling interval on unmount
   useEffect(() => {

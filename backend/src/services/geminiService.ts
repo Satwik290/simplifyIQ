@@ -2,6 +2,16 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { EnrichedCompanyData } from './enrichmentService';
 import { logger } from '../utils/logger';
 
+function escapePromptString(str: string | undefined): string {
+  if (!str) return '';
+  return str
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/"/g, '\\"')     // Escape double quotes
+    .replace(/\n/g, '\\n')    // Escape newlines
+    .replace(/\r/g, '\\r')    // Escape carriage returns
+    .slice(0, 500);            // Truncate to max 500 chars
+}
+
 export interface AuditReportData {
   executiveSummary: {
     valueProposition: string;
@@ -64,6 +74,8 @@ export class GeminiService {
       return fallbacks;
     }
 
+    const GEMINI_TIMEOUT_MS = 30000; // 30 second timeout
+
     try {
       const model = this.genAI.getGenerativeModel({
         model: 'gemini-1.5-flash',
@@ -72,14 +84,23 @@ export class GeminiService {
         }
       });
 
+      const safeCompanyName = escapePromptString(companyName);
+      const safeIndustry = escapePromptString(industry);
+      const safeTitle = escapePromptString(scrapedData.title);
+      const safeMetaDescription = escapePromptString(scrapedData.metaDescription);
+      const safeH1s = scrapedData.headings?.h1s?.map(h => escapePromptString(h)) || [];
+      const safeH2s = scrapedData.headings?.h2s?.map(h => escapePromptString(h)) || [];
+      const safeTech = scrapedData.technologyHints?.map(t => escapePromptString(t)) || [];
+      const safeStatus = escapePromptString(scrapedData.scrapingStatus);
+
       const prompt = `
-        You are a Senior B2B growth and digital transformation consultant. Your client is "${companyName}", operating in the "${industry}" industry.
+        You are a Senior B2B growth and digital transformation consultant. Your client is "${safeCompanyName}", operating in the "${safeIndustry}" industry.
         Their website domain metadata shows:
-        - Title Tag: "${scrapedData.title}"
-        - Meta Description: "${scrapedData.metaDescription}"
-        - Extracted Core Headings: H1s: ${JSON.stringify(scrapedData.headings.h1s)}, H2s: ${JSON.stringify(scrapedData.headings.h2s)}
-        - Detected Web Technologies: ${JSON.stringify(scrapedData.technologyHints)}
-        - Website Scraping Status: "${scrapedData.scrapingStatus}"
+        - Title Tag: "${safeTitle}"
+        - Meta Description: "${safeMetaDescription}"
+        - Extracted Core Headings: H1s: ${JSON.stringify(safeH1s)}, H2s: ${JSON.stringify(safeH2s)}
+        - Detected Web Technologies: ${JSON.stringify(safeTech)}
+        - Website Scraping Status: "${safeStatus}"
         
         CRITICAL CLASSIFICATION STEP: First, analyze the website data above and determine their specific business vertical (e.g., "Audio-Visual Integration", "Healthcare SaaS", "Local Plumbing", "Corporate Finance").
         DO NOT use generic SaaS advice if they are a local service, physical installer, or hardware integrator. Tailor all strategies specifically to their actual classified vertical and domain data.
@@ -96,7 +117,7 @@ export class GeminiService {
           "companyProfile": {
             "businessModel": "State their exact classified vertical (e.g., 'AV Field Support', 'B2B SaaS', 'Financial Consulting', etc.)",
             "speculatedScale": "Provide a guess based on domain sophistication: 'Early-stage Startup', 'Growth-stage SME', or 'Established Enterprise'",
-            "digitalCompetence": "Provide a grade: 'High', 'Medium', or 'Low' based on their tech hints: ${JSON.stringify(scrapedData.technologyHints)}"
+            "digitalCompetence": "Provide a grade: 'High', 'Medium', or 'Low' based on their tech hints: ${JSON.stringify(safeTech)}"
           },
           "swotAnalysis": {
             "strengths": ["List 3 specific strengths based on their domain presence and industry"],
@@ -133,10 +154,20 @@ export class GeminiService {
         }
       `;
 
-      logger.info('Calling Gemini 1.5 Flash via SDK...');
-      const result = await model.generateContent({
+      logger.info('Calling Gemini 1.5 Flash via SDK with 30s timeout race...');
+      
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Gemini API timeout after 30 seconds')),
+          GEMINI_TIMEOUT_MS
+        )
+      );
+
+      const resultPromise = model.generateContent({
         contents: [{ role: 'user', parts: [{ text: prompt }] }]
       });
+
+      const result = await Promise.race([resultPromise, timeoutPromise]);
 
       let responseText = result.response.text();
       if (!responseText) {

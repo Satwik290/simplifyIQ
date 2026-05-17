@@ -1,6 +1,7 @@
 import * as nodemailer from 'nodemailer';
 import sgMail from '@sendgrid/mail';
 import { logger } from '../utils/logger';
+import { escapeHtml } from '../utils/sanitizer';
 
 export class EmailService {
   private useSendGrid = false;
@@ -62,9 +63,22 @@ export class EmailService {
     companyName: string,
     pdfBuffer: Buffer
   ): Promise<string> {
+    // Add size check (Fix #7)
+    const MAX_SIZE_MB = 10;
+    const sizeMB = pdfBuffer.length / (1024 * 1024);
+    
+    if (sizeMB > MAX_SIZE_MB) {
+      throw new Error(
+        `PDF size (${sizeMB.toFixed(2)}MB) exceeds ${MAX_SIZE_MB}MB limit`
+      );
+    }
+
     logger.info(`Drafting follow-up B2B email to ${toEmail} for ${companyName}...`);
     
-    const subject = `Your Personalized B2B Growth Audit - ${companyName}`;
+    const safeCompanyName = escapeHtml(companyName);
+    const safeContactName = escapeHtml(contactName);
+    
+    const subject = `Your Personalized B2B Growth Audit - ${safeCompanyName}`;
     const filename = `${companyName.replace(/[^a-z0-9]/gi, '_')}_Growth_Audit_Report.pdf`;
 
     // Premium designed HTML template matching our Trust Blue & Growth Green system colors
@@ -192,9 +206,9 @@ export class EmailService {
             <p>B2B Growth Automation & Research</p>
           </div>
           <div class="body">
-            <h2>Hi ${contactName},</h2>
+            <h2>Hi ${safeContactName},</h2>
             <p>
-              Thank you for submitting your lead details. Our digital analysis and research engines have completed an automated audit of your organization's website presence for <strong>${companyName}</strong>.
+              Thank you for submitting your lead details. Our digital analysis and research engines have completed an automated audit of your organization's website presence for <strong>${safeCompanyName}</strong>.
             </p>
             <p>
               We have attached a highly comprehensive, personalized PDF report outlining our findings directly to this email.
@@ -211,7 +225,7 @@ export class EmailService {
             </div>
             
             <p>
-              Please open the attached PDF (<strong>${filename}</strong>) to view your personalized recommendations. We hope these insights help accelerate your digital strategy!
+              Please open the attached PDF (<strong>${escapeHtml(filename)}</strong>) to view your personalized recommendations. We hope these insights help accelerate your digital strategy!
             </p>
             
             <p style="margin-bottom: 0;">
